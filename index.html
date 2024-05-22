@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Hash Function</title>
+    <script>
+    function hashCode(str) {
+        var hash = 0;
+        if (str.length === 0) return hash;
+        for (let i = 0; i < str.length; i++) {
+            let char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash);
+    }
+
+    function performHash() {
+        var messages = document.getElementById("messages").value;
+        var descriptions = document.getElementById("description").value;
+        var contexts = document.getElementById("context").value;
+        var severities = document.getElementById("severities").value
+        var lines = messages.split('\n');
+        var descriptionLines = descriptions.split('\n');
+        var severitiesLines = severities.split('\n');
+        var contextLines = contexts.split('\n');
+        var result = lines.map((line, index) => {
+            if (line.trim() !== "") {
+                var hashValue = hashCode(line + "\n");
+                var severity = severitiesLines[index] || severitiesLines[0] || ""; // Get corresponding severity or first severity if not available, or empty string if nothing available
+                var description = descriptionLines[index] || ""; // Get corresponding description or empty string if not available
+                var context = contextLines[index] || contextLines[0] || "" // Get corresponding context or first context if not available, or empty string if nothing available
+                return `{\n "message": "${line}",\n "anchor": "${context}__${hashValue}",\n "severity": "${severity}",\n "context": "${context}",\n "description": "${description}",\n "name": "${hashValue}"\n}`;
+            }
+            return '';
+        }).filter(item => item !== '').join(',\n');
+        document.getElementById("hashResult").innerText = result;
+    }
+    </script>
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+        margin: 10;
+        padding: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
+    .container {
+        width: 90%;
+        max-width: 1000px;
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    h2, h3 {
+        color: #2c3e50;
+    }
+    h2 {
+        margin-bottom: 5px;
+    }
+    h3 {
+        margin-top: 0;
+        font-weight: normal;
+        font-size: 1.1em;
+        color: #7f8c8d;
+    }
+    textarea, button {
+        width: 80%;
+        max-width: 600px;
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+    }
+    button {
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #3498db;
+    }
+    #hashResult {
+        font-family: monospace;
+        white-space: pre;
+        background-color: #ecf0f1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-top: 20px;
+        width: 80%;
+        max-width: 600px;
+        text-align:left;
+    }
+    @media (max-width: 600px) {
+        textarea, button {
+            width: 95%;
+        }
+        #hashResult {
+            text-
+            width: 95%;
+        }
+    }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Server Log Reference Documentation Formatting Utility</h2>
+    <p>Paste the log messages into the first box and, optionally, descriptions, contexts, and log message severity into the following boxes.<br> Click "Calculate" to generate the reference entries.</p>
+    <p><br>If you only supply one logging context or severity level, the tool applies that item to all log messages.</p>
+    <textarea title="Log Message" id="messages" placeholder="Enter messages separated by new lines" rows="10"></textarea>
+    <textarea title="Description" id="description" placeholder="Enter descriptions separated by new lines" rows="10"></textarea>
+    <textarea title="Context" id="context" placeholder="Enter log message contexts separated by new lines" rows="10"></textarea>
+    <textarea title="Severity" id="severities" placeholder="Enter log message severity levels separated by new lines" rows="10"></textarea>
+    <button onclick="performHash()">Calculate</button>
+    <pre id="hashResult"></pre>
+</div>
+</body>
+</html>
