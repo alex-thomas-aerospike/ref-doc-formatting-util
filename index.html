@@ -1,90 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>String Hash Function</title>
-<script>
-/* ---------- Utility ---------- */
-function hashCode(str) {
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;                    // 32‑bit
-    }
-    return Math.abs(hash);
-}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server Log Reference Formatting Utility</title>
 
-/* ---------- Formatter ---------- */
-function formatEntry(obj, asYaml) {
-    if (asYaml) {
-        return `message: "${obj.message}"
-anchor: "${obj.anchor}"
-severity: "${obj.severity}"
-context: "${obj.context}"
-description: "${obj.description}"
-name: "${obj.name}"`;
-    } else { // JSON
-        return JSON.stringify(obj, null, 2);
-    }
-}
+    <!-- 3rd‑party libs -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script> <!-- :contentReference[oaicite:0]{index=0} -->
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>   <!-- :contentReference[oaicite:1]{index=1} -->
 
-/* ---------- Core ---------- */
-function performHash() {
-    const asYaml = document.getElementById("formatSelect").value === "yaml";
-
-    const messages    = document.getElementById("messages").value.split('\n');
-    const descriptions= document.getElementById("description").value.split('\n');
-    const contexts    = document.getElementById("context").value.split('\n');
-    const severities  = document.getElementById("severities").value.split('\n');
-
-    const entries = messages.map((msg, i) => {
-        if (msg.trim() === "") return null;
-        const context = contexts[i] || contexts[0] || "";
-        const obj = {
-            message:     msg,
-            anchor:      `${context}__${hashCode(msg+"\n")}`,
-            severity:    severities[i] || severities[0] || "",
-            context:     context,
-            description: descriptions[i] || "",
-            name:        String(hashCode(msg+"\n"))
-        };
-        return formatEntry(obj, asYaml);
-    }).filter(Boolean);
-
-    let result = asYaml ? entries.join('\n\n') : '[\n' + entries.join(',\n') + '\n]';
-    document.getElementById("hashResult").textContent = result;
-}
-
-/* ---------- Live binding ---------- */
-window.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('textarea, #formatSelect')
-            .forEach(el => el.addEventListener('input', performHash));
-    performHash(); // initial render
-});
-</script>
-
-<style>
+    <style>
 body{
-    font-family: Arial, sans-serif;
+    font-family:Arial, sans-serif;
     background:#f9f9f9;
     color:#333;
-    margin:10; padding:10;
+    margin:10px; padding:10px;
     display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    min-height:100vh;
+    align-items:center; justify-content:center; min-height:100vh;
 }
 .container{
     width:90%; max-width:1000px;
     background:#fff; padding:40px;
-    border-radius:8px;
-    box-shadow:0 2px 4px rgba(0,0,0,.1);
+    border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,.1);
     text-align:center;
 }
-h2{margin-bottom:5px; color:#2c3e50;}
-h3{margin-top:0; font-weight:normal; font-size:1.1em; color:#7f8c8d;}
+h2{margin:0 0 10px; color:#2c3e50;}
 textarea, select{
     width:80%; max-width:600px;
     margin:10px 0; padding:10px;
@@ -95,39 +35,145 @@ textarea, select{
     font-family:monospace; white-space:pre;
     background:#ecf0f1; padding:10px;
     border:1px solid #ccc; margin-top:20px;
-    width:80%; max-width:600px;
-    text-align:left;
-    font-size:1.1em;          /* enlarged */
+    width:80%; max-width:600px; text-align:left;
+    font-size:1.1em;
+}
+.warning{
+    color:#c0392b; margin-top:10px; font-weight:600;
 }
 @media (max-width:600px){
-    textarea, select{width:95%;}
-    #hashResult{width:95%;}
+    textarea, select,#hashResult{width:95%;}
 }
-.format-wrapper{
-    display:flex; align-items:center;
-    justify-content:center; gap:8px;
-    margin-bottom:10px;
-}
+.format-wrapper{display:flex; justify-content:center; gap:8px; margin-bottom:10px;}
+  .form-group {
+    width: 80%;
+    max-width: 600px;
+    margin: 10px auto;
+  }
+  .form-group label {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    font-size: 1em;
+    margin-bottom: 4px;
+    color: #2c3e50;
+  }
+  .form-group textarea {
+    width: 100%;
+  }
 </style>
 </head>
 <body>
 <div class="container">
-    <h2>Server Log Reference Documentation Formatting Utility</h2>
+    <h2>Server Log Reference Formatting Utility</h2>
     <div class="format-wrapper">
-        <label for="formatSelect">Output:</label>
-        <select id="formatSelect">
-            <option value="yaml" selected>YAML</option>
-            <option value="json">JSON</option>
+        <select id="formatSelect" aria-label="Output format">
+            <option value="yaml" selected>YAML formatting</option>
+            <option value="json">JSON formatting</option>
         </select>
     </div>
-    <p>Paste the log messages into the first box and, optionally, descriptions, contexts, and log‑message severities into the following boxes.<br> The output updates in real time.<br><br>If you supply only one context or severity level, the tool applies it to all log messages.</p>
 
-    <textarea id="messages"     placeholder="Enter messages separated by new lines" rows="8"></textarea>
-    <textarea id="description"  placeholder="Enter descriptions separated by new lines" rows="8"></textarea>
-    <textarea id="context"      placeholder="Enter log message contexts separated by new lines" rows="8"></textarea>
-    <textarea id="severities"   placeholder="Enter log message severity levels separated by new lines" rows="8"></textarea>
+    <p>Paste log messages below (one per line). <br>Optional: matching descriptions, contexts, severities in their respective boxes. <br> Output updates in real time.</p>
 
-    <pre id="hashResult"></pre>
+    <div class="form-group">
+        <label for="messages">Log Messages</label>
+        <textarea id="messages" rows="8" aria-label="Log messages"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Descriptions</label>
+        <textarea id="description" rows="8" aria-label="Descriptions"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="context">Contexts</label>
+        <textarea id="context" rows="8" aria-label="Contexts"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="severities">Severities</label>
+        <textarea id="severities" rows="8" aria-label="Severities"></textarea>
+    </div>
+
+    <div id="warning" class="warning" role="alert" aria-live="assertive"></div>
+    <pre id="hashResult" aria-label="Formatted output"></pre>
 </div>
+
+<script>
+/* ---------------- Utility ---------------- */
+function hashCode(str){
+    let h=0;
+    for(let i=0;i<str.length;i++){
+        h=((h<<5)-h)+str.charCodeAt(i); h|=0;
+    }
+    return Math.abs(h);
+}
+function clean(str){
+    // Strip any markup; leave plain characters intact
+    return DOMPurify.sanitize(str, {ALLOWED_TAGS:[], ALLOWED_ATTR:[]});
+}
+
+/* -------------- Core Engine -------------- */
+function buildEntries(){
+    const msgLines = document.getElementById('messages').value.split('\n').map(clean);
+    const descLines= document.getElementById('description').value.split('\n').map(clean);
+    const ctxLines = document.getElementById('context').value.split('\n').map(clean);
+    const sevLines = document.getElementById('severities').value.split('\n').map(clean);
+
+    // Simple validation feedback
+    const warn = document.getElementById('warning');
+    const counts=[msgLines.length, descLines.length||0, ctxLines.length||0, sevLines.length||0];
+    const max=counts[0];
+    const mismatch = counts.some((c,i)=>i>0 && c>1 && c!==max);
+    warn.textContent = mismatch ? '⚠︎ Line‑count mismatch – check your inputs.' : '';
+
+    const entries=[];
+    msgLines.forEach((msg,i)=>{
+        if(!msg.trim()) return;
+        const ctx = ctxLines[i] || ctxLines[0] || '';
+        entries.push({
+            message:     msg,
+            anchor:      `${ctx}__${hashCode(msg+"\n")}`,
+            severity:    sevLines[i] || sevLines[0] || '',
+            context:     ctx,
+            description: descLines[i] || '',
+            name:        String(hashCode(msg+"\n\n"))
+        });
+    });
+    return entries;
+}
+function render(){
+    const asYaml = document.getElementById('formatSelect').value==='yaml';
+    const data   = buildEntries();
+
+        let out;
+        if (asYaml) {
+            const opts = {
+                noRefs:      true,
+                lineWidth:   -1,
+                quotingType: '"',
+                forceQuotes: true
+            };
+            // Dump each object individually, trim trailing newline, then join with a blank line
+            const snippets = data.map(obj => jsyaml.dump(obj, opts).trim());
+            out = snippets.join('\n\n');
+        } else {
+            out = JSON.stringify(data, (_,v) => v, 2);
+        }
+    document.getElementById('hashResult').textContent = out;
+}
+
+/* ------------- Event Binding ------------- */
+function debounce(fn, delay=250){
+    let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),delay);};
+}
+const debouncedRender = debounce(render, 150);
+
+window.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelectorAll('textarea, #formatSelect')
+            .forEach(el=>el.addEventListener('input', debouncedRender));
+    render(); // first paint
+});
+</script>
 </body>
 </html>
